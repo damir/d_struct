@@ -1,0 +1,6 @@
+en:
+  errors:
+
+    rules:
+      context_key:
+        same_as_context_value?: "not the same"
