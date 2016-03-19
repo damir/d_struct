@@ -25,18 +25,28 @@
   
   # unknown key
   struct = MyStruct.new({unknown_key: '123'})
+  struct.add_validation_schema MyValidationSchema
   puts struct.valid? # => false
   puts struct.errors # => {unknown_key: 'unknown key'}
   
   # missing keys
   struct = MyStruct.new({})
+  struct.add_validation_schema MyValidationSchema
   puts struct.valid? # => false
   puts struct.errors # => {:string=>["is missing"], :int=>["is missing"], :bool=>["is missing"], :arr=>["is missing"]}
   
   # invalid values
   struct = MyStruct.new({string: nil, int: nil, bool: nil, arr: nil})
+  struct.add_validation_schema MyValidationSchema
   puts struct.valid? # => false
   puts struct.errors # => {:string=>["must be filled"], :int=>["must be filled"], :bool=>["must be filled"], :arr=>["must be filled"]}
+  
+  # multiple schemas
+  Schema1 = Dry::Validation.Schema{key(:string).required(:str?)}
+  Schema2 = Dry::Validation.Schema{key(:int).required(:int?)}
+  struct = MyStruct.new({string: 'abc', int: 123})
+  struct.add_validation_schema Schema1, Schema2
+  puts struct.valid? # => true
 ```
 
 ## Installation

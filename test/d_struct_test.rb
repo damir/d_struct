@@ -91,4 +91,26 @@ class DStructTest < Minitest::Test
     assert !struct.valid?
   end
 
+  def test_multiple_schemas
+    schema1 = Dry::Validation.Schema do
+      key(:string).required(:str?)
+      key(:int).required(:int?)
+    end
+
+    schema2 = Dry::Validation.Schema do
+      key(:bool).required(:bool?)
+      key(:arr).required(:array?)
+    end
+
+    invalid_struct = MyStruct.new({})
+    invalid_struct.add_validation_schema schema1, schema2
+    assert 4, invalid_struct.errors.keys.size
+    assert !invalid_struct.valid?
+
+    valid_struct = MyStruct.new(@valid_input_hash)
+    valid_struct.add_validation_schema schema1
+    valid_struct.add_validation_schema schema2
+    assert valid_struct.valid?
+  end
+
 end

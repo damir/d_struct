@@ -4,7 +4,6 @@ module DStruct
   class DStruct
 
     attr_reader :to_h
-    attr_accessor :validation_schema
 
     def self.attributes(attributes_hash)
       @attributes_readers   = attributes_hash.values.flatten
@@ -54,12 +53,13 @@ module DStruct
       end
     end
 
-    def add_validation_schema(schema)
-      @validation_schema = schema
+    def add_validation_schema(*schema)
+      @validation_schemas << schema
     end
 
     def initialize(attributes_hash)
       @to_h = {}
+      @validation_schemas = []
       attributes_hash.each do |k,v|
         begin
           send("#{k}=", v)
@@ -71,9 +71,9 @@ module DStruct
     end
 
     def errors
-      return @errors if @errors           # unknown key
-      return {} unless validation_schema  # no schema
-      @errors ||= validation_schema.call(to_h).messages
+      return @errors if @errors               # unknown key
+      return {} if @validation_schemas == []  # no schemas
+      @errors ||= @validation_schemas.flatten.reduce({}){|errors, schema| errors.update(schema.call(to_h).messages)}
     end
 
     def valid?
