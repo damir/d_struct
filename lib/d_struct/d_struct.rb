@@ -9,8 +9,9 @@ module DStruct
       @attributes_readers   = attributes_hash.values.flatten
       @string_attributes    = attributes_hash[:strings]   || []
       @integer_attributes   = attributes_hash[:integers]  || []
-      @booleans_attributes  = attributes_hash[:booleans]  || []
-      @array_attributes     = attributes_hash[:arrays]  || []
+      @boolean_attributes  = attributes_hash[:booleans]   || []
+      @array_attributes     = attributes_hash[:arrays]    || []
+      @date_attributes      = attributes_hash[:dates]     || []
 
       # generate readers
       attr_reader *@attributes_readers
@@ -19,7 +20,7 @@ module DStruct
       @string_attributes.each do |string_attr|
         define_method "#{string_attr}=" do |str_arg|
           value = str_arg.to_s
-          instance_variable_set("@#{string_attr}", str_arg)
+          instance_variable_set("@#{string_attr}", value)
           @to_h[string_attr] = value
         end
       end
@@ -32,13 +33,10 @@ module DStruct
         end
       end
 
-      @booleans_attributes.each do |boolean_attr|
+      @boolean_attributes.each do |boolean_attr|
         define_method "#{boolean_attr}=" do |boolean_arg|
-          value = case boolean_arg
-                  when TrueClass  then true
-                  when FalseClass then false
-                  else nil
-                  end
+          value = !!boolean_arg
+          value = nil if boolean_arg.nil?
           instance_variable_set("@#{boolean_attr}", value)
           @to_h[boolean_attr] = value
         end
@@ -49,6 +47,14 @@ module DStruct
           value = (Array(arr_arg) rescue nil)
           instance_variable_set("@#{arr_attr}", value)
           @to_h[arr_attr] = value
+        end
+      end
+
+      @date_attributes.each do |date_attr|
+        define_method "#{date_attr}=" do |date_arg|
+          value = (Date.parse(date_arg.to_s) rescue nil)
+          instance_variable_set("@#{date_attr}", value)
+          @to_h[date_attr] = value
         end
       end
     end
@@ -76,6 +82,7 @@ module DStruct
       @errors ||= @validation_schemas.flatten.reduce({}){|errors, schema| errors.update(schema.call(to_h).messages)}
     end
 
+    # call once, it is cached in @errors
     def valid?
       errors.empty?
     end

@@ -16,10 +16,17 @@
     key(:arr).required(:array?)
   end
   
-  # initialize with hash
-  struct = MyStruct.new({string: 'abc', int: 123, bool: true, arr: [1]})
+  # initialize without casting
+  struct = MyStruct.new({string: '123', int: 123, bool: true, arr: [1], date: Date.today})
   struct.add_validation_schema MyValidationSchema
-  puts struct.to_h   # => {string: 'abc', int: 123, bool: true, arr: [1]}
+  puts struct.to_h   # => {string: '123', int: 123, bool: true, arr: [1], #<Date: 2016-03-22 ...>}
+  puts struct.valid? # => true
+  puts struct.errors # => {}
+  
+  # initialize with casting
+  struct = MyStruct.new({string: 123, int: '123', bool: 'true', arr: 1, date: '2016-03-22'})
+  struct.add_validation_schema MyValidationSchema
+  puts struct.to_h   # => {string: '123', int: 123, bool: true, arr: [1], #<Date: 2016-03-22 ...>}
   puts struct.valid? # => true
   puts struct.errors # => {}
   
@@ -44,7 +51,7 @@
   # multiple schemas
   Schema1 = Dry::Validation.Schema{key(:string).required(:str?)}
   Schema2 = Dry::Validation.Schema{key(:int).required(:int?)}
-  struct = MyStruct.new({string: 'abc', int: 123})
+  struct = MyStruct.new({string: '123', int: 123})
   struct.add_validation_schema Schema1, Schema2
   puts struct.valid? # => true
 ```

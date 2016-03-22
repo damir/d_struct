@@ -6,7 +6,7 @@ class DStructTest < Minitest::Test
   end
 
   class MyStruct < DStruct::DStruct
-    attributes strings: [:string], integers: [:int], booleans: [:bool], arrays: [:arr]
+    attributes strings: [:string], integers: [:int], booleans: [:bool], arrays: [:arr], dates: [:date]
   end
 
   MyValidationSchema = Dry::Validation.Schema do
@@ -14,6 +14,7 @@ class DStructTest < Minitest::Test
     key(:int).required(:int?)
     key(:bool).required(:bool?)
     key(:arr).required(:array?)
+    key(:date).required(:date?)
   end
 
   class MyStructWithContext < DStruct::DStruct
@@ -36,25 +37,45 @@ class DStructTest < Minitest::Test
   end
 
   def setup
-    @valid_input_hash = {string: 'abc', int: 123, bool: true, arr: [1]}
+    @valid_input_hash = {string: '123', int: 123, bool: true, arr: [1], date: Date.today}
   end
 
-  def test_valid_input_without_validator_schema
+  def test_valid_input_without_casting_and_without_validator_schema
     struct = MyStruct.new(@valid_input_hash)
-
     assert struct.valid?
     assert_equal({}, struct.errors)
     assert @valid_input_hash == struct.to_h
 
-    assert_equal 'abc', struct.string
+    assert_equal '123', struct.string
     assert_equal 123, struct.int
     assert_equal true, struct.bool
     assert_equal [1], struct.arr
+    assert_equal Date.today, struct.date
 
     assert_equal String, struct.string.class
     assert_equal Fixnum, struct.int.class
     assert_equal TrueClass, struct.bool.class
     assert_equal Array, struct.arr.class
+    assert_equal Date, struct.date.class
+  end
+
+  def test_valid_input_with_casting_and_without_validator_schema
+    struct = MyStruct.new(string: 123, int: '123', bool: 'true', arr: 1, date: Date.today.to_s)
+
+    assert struct.valid?
+    assert_equal({}, struct.errors)
+
+    assert_equal '123', struct.string
+    assert_equal 123, struct.int
+    assert_equal true, struct.bool
+    assert_equal [1], struct.arr
+    assert_equal Date.today, struct.date
+
+    assert_equal String, struct.string.class
+    assert_equal Fixnum, struct.int.class
+    assert_equal TrueClass, struct.bool.class
+    assert_equal Array, struct.arr.class
+    assert_equal Date, struct.date.class
   end
 
   def test_not_defined_key
@@ -73,15 +94,17 @@ class DStructTest < Minitest::Test
   end
 
   def test_invalid_input_with_validator_schema
-    struct = MyStruct.new({string: nil, int: nil, bool: nil, arr: nil})
+    struct = MyStruct.new({string: nil, int: nil, bool: nil, arr: nil, date: nil})
     struct.add_validation_schema MyValidationSchema
     assert !struct.valid?
+    assert_equal 5, struct.errors.keys.size
   end
 
   def test_missing_keys_with_validator_schema
     struct = MyStruct.new({})
     struct.add_validation_schema MyValidationSchema
     assert !struct.valid?
+    assert_equal 5, struct.errors.keys.size
   end
 
   def test_context
