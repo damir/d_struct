@@ -9,9 +9,10 @@ module DStruct
       @attributes_readers   = attributes_hash.values.flatten
       @string_attributes    = attributes_hash[:strings]   || []
       @integer_attributes   = attributes_hash[:integers]  || []
-      @boolean_attributes  = attributes_hash[:booleans]   || []
+      @boolean_attributes   = attributes_hash[:booleans]  || []
       @array_attributes     = attributes_hash[:arrays]    || []
       @date_attributes      = attributes_hash[:dates]     || []
+      @time_attributes      = attributes_hash[:times]     || []
 
       # generate readers
       attr_reader *@attributes_readers
@@ -55,6 +56,14 @@ module DStruct
           value = (Date.parse(date_arg.to_s) rescue nil)
           instance_variable_set("@#{date_attr}", value)
           @to_h[date_attr] = value
+        end
+      end
+
+      @time_attributes.each do |time_attr|
+        define_method "#{time_attr}=" do |time_arg|
+          value = (Time.parse(time_arg.to_s) rescue nil)
+          instance_variable_set("@#{time_attr}", value)
+          @to_h[time_attr] = value
         end
       end
     end
