@@ -2,7 +2,7 @@
 
 ## Usage
 
-Compatibile with dry-validation 0.7.4
+Compatible with dry-validation 0.7.4
 
 ```ruby
   # configure attribute types
